@@ -25,7 +25,8 @@ public class Main {
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("message", "Hello World!");
 
-        return new ModelAndView(attributes, "index.ftl");
+        response.redirect("index.html");
+        return null;
     }, new FreeMarkerEngine());
 
     HikariConfig config = new  HikariConfig();
