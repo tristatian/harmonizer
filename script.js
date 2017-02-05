@@ -6,28 +6,29 @@ var defaultOctave = 5;
 // Octave of the previous note.
 var previousOctave;
 
-// Audio context for playing notes.
-var audio = new (window.AudioContext || window.webkitAudioContext)();
+/*
+Synth.loadSoundProfile({
+	name: 'better_piano',
+	attack: function() { return 0.002; },
+	dampen: function(sampleRate, frequency, volume) {
+		return Math.pow(0.5*Math.log((frequency*volume)/sampleRate),2);
+	},
+	wave: function(i, sampleRate, frequency, volume) {
+		var base = this.modulate[0];
+		return this.modulate[1](
+			i,
+			sampleRate,
+			frequency,
+			Math.pow(base(i, sampleRate, frequency, 0), 2) +
+				(0.75 * base(i, sampleRate, frequency, 0.25)) +
+				(0.1 * base(i, sampleRate, frequency, 0.5))
+		);
+	}
+});
+*/
 
-function playNote(frequency, volume, duration)
-{
-    var halfPeriod = 1 / frequency / 2;
-    if (duration > halfPeriod) {
-        duration -= duration % halfPeriod;
-    } else {
-        duration = halfPeriod;
-    }
-
-    var g = audio.createGain();
-    var o = audio.createOscillator();
-    o.connect(g);
-    g.connect(audio.destination);
-
-    o.frequency.value = frequency;
-    g.gain.value = volume;
-    o.start(0);
-    o.stop(audio.currentTime + duration);
-}
+// Piano synthesizer.
+var piano = Synth.createInstrument('piano');
 
 // Returns true if the note is valid.
 function validateNote(note) {
@@ -45,22 +46,12 @@ function validateNote(note) {
 	else return true;
 }
 
-// Returns 0 for C, 1 for D, ..., 5 for A, 6 for B.
-function letterToPitchIndex(letter) {
-	if (letter >= "A" && letter <= "B") {
-		return letter.charCodeAt(0) - "A".charCodeAt(0) + 5;
-	}
-	else return letter.charCodeAt(0) - "C".charCodeAt(0);
-}
-
-// Converts the note to a frequency. Assumes letter is uppercase.
-function noteToFrequency(note) {
-	var pitchIndex = letterToPitchIndex(note[0]);
+// Returns the pair [letter, octave] for the given note, where octave is a number.
+// Uses the previous octave if note doens't have one.
+function getPair(note) {
 	var octave = (note.length == 2) ? note[1] - "0" : previousOctave;
 	previousOctave = octave;
-	var i = 7*octave + pitchIndex;
-	return 16.35 * Math.pow (2, i/7);
-
+	return [note[0], octave];
 }
 
 // Validates and returns the notes from the text field.
@@ -81,6 +72,10 @@ function getNotes() {
 	return notes;
 }
 
+function playPair(pair) {
+	piano.play(pair[0], pair[1], noteDuration * 3);
+}
+
 function play() {
 	var notes = getNotes();
 	if (notes == false) {
@@ -90,7 +85,8 @@ function play() {
 	// Play the notes.
 	var i = 0;
 	var playNext = function() {
-		playNote(noteToFrequency(notes[i]), noteVolume, noteDuration);
+		var pair = getPair(notes[i]);
+		playPair(pair);
 		i++;
 		if (i < notes.length) {
 			setTimeout(playNext, noteDuration * 1000);
@@ -98,6 +94,95 @@ function play() {
 	}
 	playNext();
 }
+
+// Returns a new note delta steps from the given note pair. Delta must be nonnegative.
+function moveNote(pair, delta) {
+	var letter = pair[0];
+	var octave = pair[1];
+	while (delta > 0) {
+		if (letter=="B"){
+			letter="C";
+			octave++;
+		} else if (letter=="G"){
+			letter = "A";
+		} else {
+			letter = String.fromCharCode(letter.charCodeAt(0)+1);
+		}
+		delta--;
+	}
+	return [letter, octave];
+}
+
+// Returns a chord (array of 3 note pairs) given a melody note pair and the inversion number (0, 1, or 2).
+function generateChord(pair, inversion) {
+	if(inversion == 0) {
+		return [moveNote(pair, 7), moveNote(pair, 5), moveNote(pair, 3)];
+	}
+	if (inversion ==1){
+		return [moveNote(pair, 7), moveNote(pair, 4), moveNote(pair, 2)];
+    }
+    if (inversion ==2) {
+    	return [moveNote(pair, 7), moveNote(pair, 5), moveNote(pair, 2)];
+    }
+}
+
+// Returns a random number between 0 and 2 (inclusive).
+function randomInversion() {
+	return Math.floor(Math.random() * 3);  
+}
+
+function playWithHarmony() {
+	var notes = getNotes();
+	if (notes == false) {
+		return;
+	}
+
+	// Play the notes with harmony.
+	var i = 0;
+	var previousInversion = randomInversion();
+	var playNext = function() {
+		var inversion;
+		do {
+			inversion = randomInversion();
+		} while(inversion == previousInversion);
+		previousInversion = inversion;
+
+		var pair = getPair(notes[i]);
+		var chord = generateChord(pair, inversion);
+
+		playPair(pair);
+		playPair(chord[0]);
+		playPair(chord[1]);
+		playPair(chord[2]);
+		i++;
+		if (i < notes.length) {
+			setTimeout(playNext, noteDuration * 1000);
+		}
+	}
+	playNext();
+}
+
+// ***** NOT USED ANYMORE
+
+/*
+// Returns 0 for C, 1 for D, ..., 5 for A, 6 for B.
+function letterToPitchIndex(letter) {
+	if (letter >= "A" && letter <= "B") {
+		return letter.charCodeAt(0) - "A".charCodeAt(0) + 5;
+	}
+	else return letter.charCodeAt(0) - "C".charCodeAt(0);
+}
+
+// Converts the note to a frequency. Assumes letter is uppercase.
+function noteToFrequency(note) {
+	var pitchIndex = letterToPitchIndex(note[0]);
+	var octave = (note.length == 2) ? note[1] - "0" : previousOctave;
+	previousOctave = octave;
+	var i = 7*octave + pitchIndex;
+	return 16.35 * Math.pow (2, i/7);
+
+}
+
 
 // Returns a new frequency delta steps from the given one.
 function moveNote(frequency, delta) {
@@ -116,39 +201,4 @@ function generateChord(frequency, inversion) {
     	return [moveNote(frequency, 7), moveNote(frequency, 5), moveNote(frequency, 2)];
     }
 }
-
-// Returns a random number between 0 and 2 (inclusive).
-function randomInversion() {
-	return Math.floor(Math.random() * 3);  
-}
-
-function playWithHarmony() {
-	var notes = getNotes();
-	if (notes == false) {
-		return;
-	}
-
-
-	// Play the notes with harmony.
-	var i = 0;
-	var previousInversion = randomInversion();
-	var playNext = function() {
-		var frequency = noteToFrequency(notes[i]);
-		var inversion;
-		do {
-			inversion = randomInversion();
-		} while(inversion == previousInversion);
-		previousInversion = inversion;
-		var chord = generateChord(frequency, inversion);
-
-		playNote(frequency, noteVolume, noteDuration);
-		playNote(chord[0], noteVolume, noteDuration);
-		playNote(chord[1], noteVolume, noteDuration);
-		playNote(chord[2], noteVolume, noteDuration);
-		i++;
-		if (i < notes.length) {
-			setTimeout(playNext, noteDuration * 1000);
-		}
-	}
-	playNext();
-}
+*/
