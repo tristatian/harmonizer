@@ -63,7 +63,8 @@ function noteToFrequency(note) {
 
 }
 
-function play() {
+// Validates and returns the notes from the text field.
+function getNotes() {
 	previousOctave = defaultOctave;
 	var melody = document.getElementById("melody").value;
 	var notes = melody.split(" ");
@@ -73,8 +74,17 @@ function play() {
 		notes[i] = notes[i].toUpperCase();
 		if (!validateNote(notes[i])) {
 			alert("Invalid note " + notes[i] + ". Try again!");
-			return;
+			return false;
 		}
+	}
+
+	return notes;
+}
+
+function play() {
+	var notes = getNotes();
+	if (notes == false) {
+		return;
 	}
 
 	// Play the notes.
@@ -89,6 +99,56 @@ function play() {
 	playNext();
 }
 
+// Returns a new frequency delta steps from the given one.
+function moveNote(frequency, delta) {
+	return frequency * Math.pow(2, delta / 7);
+}
+
+// Returns a chord (array of 3 frequency) given a melody frequency and the inversion number (0, 1, or 2).
+function generateChord(frequency, inversion) {
+	if(inversion == 0) {
+		return [moveNote(frequency, 7), moveNote(frequency, 5), moveNote(frequency, 3)];
+	}
+	if (inversion ==1){
+		return [moveNote(frequency, 7), moveNote(frequency, 4), moveNote(frequency, 2)];
+    }
+    if (inversion ==2) {
+    	return [moveNote(frequency, 7), moveNote(frequency, 5), moveNote(frequency, 2)];
+    }
+}
+
+// Returns a random number between 0 and 2 (inclusive).
+function randomInversion() {
+	return Math.floor(Math.random() * 3);  
+}
+
 function playWithHarmony() {
-	alert("This should play with harmony.");
+	var notes = getNotes();
+	if (notes == false) {
+		return;
+	}
+
+
+	// Play the notes with harmony.
+	var i = 0;
+	var previousInversion = randomInversion();
+	var playNext = function() {
+		var frequency = noteToFrequency(notes[i]);
+		var inversion;
+		do {
+			inversion = randomInversion();
+		} while(inversion == previousInversion);
+		previousInversion = inversion;
+		var chord = generateChord(frequency, inversion);
+
+		playNote(frequency, noteVolume, noteDuration);
+		playNote(chord[0], noteVolume, noteDuration);
+		playNote(chord[1], noteVolume, noteDuration);
+		playNote(chord[2], noteVolume, noteDuration);
+		i++;
+		if (i < notes.length) {
+			setTimeout(playNext, noteDuration * 1000);
+		}
+	}
+	playNext();
 }
