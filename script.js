@@ -1,5 +1,5 @@
 // Constants.
-var noteDuration = 1.0;
+var noteDuration = 0.5;
 var noteVolume = 1.0;
 var defaultOctave = 5;
 
@@ -57,7 +57,12 @@ function getPair(note) {
 // Validates and returns the notes from the text field.
 function getNotes() {
 	previousOctave = defaultOctave;
-	var melody = document.getElementById("melody").value;
+	var melody = document.getElementById("melody").value.trim();
+	if(melody==""){
+		alert("Empty string! Try again.");
+		return false;
+	}
+
 	var notes = melody.split(" ");
 
 	// Validate all the notes.
@@ -73,7 +78,7 @@ function getNotes() {
 }
 
 function playPair(pair) {
-	piano.play(pair[0], pair[1], noteDuration * 3);
+	piano.play(pair[0], pair[1], 2);
 }
 
 function play() {
@@ -162,43 +167,10 @@ function playWithHarmony() {
 	playNext();
 }
 
-// ***** NOT USED ANYMORE
-
-/*
-// Returns 0 for C, 1 for D, ..., 5 for A, 6 for B.
-function letterToPitchIndex(letter) {
-	if (letter >= "A" && letter <= "B") {
-		return letter.charCodeAt(0) - "A".charCodeAt(0) + 5;
-	}
-	else return letter.charCodeAt(0) - "C".charCodeAt(0);
-}
-
-// Converts the note to a frequency. Assumes letter is uppercase.
-function noteToFrequency(note) {
-	var pitchIndex = letterToPitchIndex(note[0]);
-	var octave = (note.length == 2) ? note[1] - "0" : previousOctave;
-	previousOctave = octave;
-	var i = 7*octave + pitchIndex;
-	return 16.35 * Math.pow (2, i/7);
+function Save (){
 
 }
 
+function Load (){
 
-// Returns a new frequency delta steps from the given one.
-function moveNote(frequency, delta) {
-	return frequency * Math.pow(2, delta / 7);
 }
-
-// Returns a chord (array of 3 frequency) given a melody frequency and the inversion number (0, 1, or 2).
-function generateChord(frequency, inversion) {
-	if(inversion == 0) {
-		return [moveNote(frequency, 7), moveNote(frequency, 5), moveNote(frequency, 3)];
-	}
-	if (inversion ==1){
-		return [moveNote(frequency, 7), moveNote(frequency, 4), moveNote(frequency, 2)];
-    }
-    if (inversion ==2) {
-    	return [moveNote(frequency, 7), moveNote(frequency, 5), moveNote(frequency, 2)];
-    }
-}
-*/

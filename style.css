@@ -5,6 +5,10 @@ body {
 	margin-top: 100px;
 }
 
+h1 {
+	color: orange;
+}
+
 caption {
 	margin-bottom: 10px;
 	display: block;
@@ -16,6 +20,21 @@ input {
 	font-size: 28px;
 }
 
-h1 {
-	color: orange;
+input[type=button] {
+	width: 250px;
+	border: 1px solid black;
+	background: #eeeeee;
+	font-size: 24px;
+	padding: 10px;
+	cursor: pointer;
 }
+
+input[type=button]:hover {
+    color: red;
+}
+
+input[type=button]:active {
+    color: blue;
+}
+
+
