@@ -1,0 +1,21 @@
+body {
+	text-align: center;
+	font-family: "Baskerville", serif;
+	font-size: 28px;
+	margin-top: 100px;
+}
+
+caption {
+	margin-bottom: 10px;
+	display: block;
+}
+
+input {
+	display: block;
+	margin: 0 auto 20px;
+	font-size: 28px;
+}
+
+h1 {
+	color: orange;
+}
