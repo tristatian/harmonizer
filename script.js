@@ -4,10 +4,10 @@ var noteVolume = 1.0;
 var defaultOctave = 5;
 
 // Octave of the previous note.
-var previousOctave = defaultOctave;
+var previousOctave;
 
 // Audio context for playing notes.
-var audio = new (window.AudioContext || window.webkitAudioContext)()
+var audio = new (window.AudioContext || window.webkitAudioContext)();
 
 function playNote(frequency, volume, duration)
 {
@@ -35,10 +35,6 @@ function validateNote(note) {
 		return false;
 	}
 
-	if (note[0] >= "a" && note[0] <= "z") {
-		note[0] = note[0] + ("a" - "A");
-	}
-
 	if(note[0] < "A" || note[0] > "G") {
 		return false;
 	}
@@ -52,9 +48,9 @@ function validateNote(note) {
 // Returns 0 for C, 1 for D, ..., 5 for A, 6 for B.
 function letterToPitchIndex(letter) {
 	if (letter >= "A" && letter <= "B") {
-		return letter - "A" + 5;
+		return letter.charCodeAt(0) - "A".charCodeAt(0) + 5;
 	}
-	else return letter - "C";
+	else return letter.charCodeAt(0) - "C".charCodeAt(0);
 }
 
 // Converts the note to a frequency. Assumes letter is uppercase.
@@ -68,11 +64,13 @@ function noteToFrequency(note) {
 }
 
 function play() {
+	previousOctave = defaultOctave;
 	var melody = document.getElementById("melody").value;
 	var notes = melody.split(" ");
 
 	// Validate all the notes.
 	for (var i = 0; i < notes.length; i++) {
+		notes[i] = notes[i].toUpperCase();
 		if (!validateNote(notes[i])) {
 			alert("Invalid note " + notes[i] + ". Try again!");
 			return;
@@ -80,9 +78,15 @@ function play() {
 	}
 
 	// Play the notes.
-	for (var i = 0; i < notes.length; i++) {
+	var i = 0;
+	var playNext = function() {
 		playNote(noteToFrequency(notes[i]), noteVolume, noteDuration);
+		i++;
+		if (i < notes.length) {
+			setTimeout(playNext, noteDuration * 1000);
+		}
 	}
+	playNext();
 }
 
 function playWithHarmony() {
