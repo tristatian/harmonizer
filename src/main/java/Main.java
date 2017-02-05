@@ -19,42 +19,43 @@ public class Main {
     port(Integer.valueOf(System.getenv("PORT")));
     staticFileLocation("/public");
 
-    get("/hello", (req, res) -> "Hello World");
-
     get("/", (request, response) -> {
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("message", "Hello World!");
-
         response.redirect("index.html");
         return null;
-    }, new FreeMarkerEngine());
+    });
 
     HikariConfig config = new  HikariConfig();
     config.setJdbcUrl(System.getenv("JDBC_DATABASE_URL"));
     final HikariDataSource dataSource = (config.getJdbcUrl() != null) ?
       new HikariDataSource(config) : new HikariDataSource();
 
-    get("/db", (req, res) -> {
-      Map<String, Object> attributes = new HashMap<>();
+    get("/load", (request, response) -> {
       try(Connection connection = dataSource.getConnection()) {
         Statement stmt = connection.createStatement();
-        stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-        stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-        ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
+        stmt.executeUpdate("CREATE TABLE IF NOT EXISTS melodies (name varchar, content varchar)");
+        ResultSet rs = stmt.executeQuery("SELECT * FROM melodies");
 
         ArrayList<String> output = new ArrayList<String>();
+        String str = "";
         while (rs.next()) {
-          output.add( "Read from DB: " + rs.getTimestamp("tick"));
+          str += rs.getString("name");
         }
-
-        attributes.put("results", output);
-        return new ModelAndView(attributes, "db.ftl");
+        return str;
       } catch (Exception e) {
-        attributes.put("message", "There was an error: " + e);
-        return new ModelAndView(attributes, "error.ftl");
+        return "Error";
       }
-    }, new FreeMarkerEngine());
+    });
 
+    post("/save", (request, response) -> {
+      try(Connection connection = dataSource.getConnection()) {
+        Statement stmt = connection.createStatement();
+        stmt.executeUpdate("CREATE TABLE IF NOT EXISTS melodies (name varchar, content varchar)");
+        // stmt.executeUpdate("INSERT INTO melodies VALUES (" + + ")");
+        System.out.println("Request: " + request.body());
+        return "Success";
+      } catch (Exception e) {
+        return "Error";
+      }
+    });
   }
-
 }
