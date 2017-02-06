@@ -182,12 +182,27 @@ function Save (){
 	};
 	xhr.timeout = 15000;
 	xhr.open("POST", "/save", true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	var data = JSON.stringify({name: name, notes: document.getElementById("melody").value.trim()});
+	xhr.setRequestHeader("Content-Type", "text/plain");
+	var data = name + "\n" + document.getElementById("melody").value.trim();
 	xhr.send(data);
 }
 
 
 function Load (){
+	var name = prompt("Enter the name", "");
 
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4) {
+			if(xhr.status == 200){
+			    document.getElementById("melody").value = xhr.responseText;
+			} else{
+				alert("Failed to load melody!");
+			}
+		}
+	};
+	xhr.timeout = 15000;
+	xhr.open("GET", "/load", true);
+	xhr.setRequestHeader("Content-Type", "text/plain");
+	xhr.send(name);
 }

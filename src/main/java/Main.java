@@ -33,15 +33,11 @@ public class Main {
       try(Connection connection = dataSource.getConnection()) {
         Statement stmt = connection.createStatement();
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS melodies (name varchar, content varchar)");
-        ResultSet rs = stmt.executeQuery("SELECT * FROM melodies");
+        ResultSet rs = stmt.executeQuery("SELECT content FROM melodies where name = '" + request.body() + "'");
 
-        ArrayList<String> output = new ArrayList<String>();
-        String str = "";
-        while (rs.next()) {
-          str += rs.getString("name");
-        }
-        return str;
+        return rs.getString("content");
       } catch (Exception e) {
+        response.status(404);
         return "Error";
       }
     });
@@ -50,10 +46,12 @@ public class Main {
       try(Connection connection = dataSource.getConnection()) {
         Statement stmt = connection.createStatement();
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS melodies (name varchar, content varchar)");
-        // stmt.executeUpdate("INSERT INTO melodies VALUES (" + + ")");
-        System.out.println("Request: " + request.body());
+        String body = request.body();
+        String[] lines = body.split("\n");
+        stmt.executeUpdate("INSERT INTO melodies VALUES ('" + lines[0] + "', '" + lines[1] + "')");
         return "Success";
       } catch (Exception e) {
+        response.status(404);
         return "Error";
       }
     });
