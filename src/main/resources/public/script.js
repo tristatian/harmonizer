@@ -202,7 +202,7 @@ function Load (){
 		}
 	};
 	xhr.timeout = 15000;
-	xhr.open("GET", "/load", true);
+	xhr.open("POST", "/load", true);
 	xhr.setRequestHeader("Content-Type", "text/plain");
 	xhr.send(name);
 }

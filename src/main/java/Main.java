@@ -29,7 +29,7 @@ public class Main {
     final HikariDataSource dataSource = (config.getJdbcUrl() != null) ?
       new HikariDataSource(config) : new HikariDataSource();
 
-    get("/load", (request, response) -> {
+    post("/load", (request, response) -> {
       try(Connection connection = dataSource.getConnection()) {
         Statement stmt = connection.createStatement();
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS melodies (name varchar, content varchar)");
