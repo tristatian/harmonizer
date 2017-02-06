@@ -168,8 +168,25 @@ function playWithHarmony() {
 }
 
 function Save (){
+	var name = prompt("Enter a name", "");
 
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4) {
+			if(xhr.status == 200){
+	          alert("Melody saved!");
+			} else{
+				alert ("Melody failed saving!");
+			}
+		}
+	};
+	xhr.timeout = 15000;
+	xhr.open("POST", "/save", true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	var data = JSON.stringify({name: name, notes: document.getElementById("melody").value.trim()});
+	xhr.send(data);
 }
+
 
 function Load (){
 
