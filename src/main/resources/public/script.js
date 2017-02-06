@@ -27,6 +27,33 @@ Synth.loadSoundProfile({
 });
 */
 
+function updateMelodyList() {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+	if (xhr.readyState == 4) {
+	    if(xhr.status == 200){
+		var melodies = xhr.responseText.trim().split("\n");
+		var select = document.getElementById("melody-list");
+		while (select.hasChildNodes()) {
+		    select.removeChild(select.lastChild);
+		}
+		for (var i = 0; i < melodies.length; i++) {
+		    var opt = document.createElement("option");
+		    opt.value = melodies[i];
+		    opt.textContent = melodies[i];
+		    select.appendChild(opt);
+		}
+	    } else{
+		alert("Failed to load melody list!");
+	    }
+	}
+    };
+    xhr.timeout = 15000;
+    xhr.open("GET", "/melodies", true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.send();
+}
+
 // Piano synthesizer.
 var piano = Synth.createInstrument('piano');
 
@@ -168,41 +195,82 @@ function playWithHarmony() {
 }
 
 function Save (){
-	var name = prompt("Enter a name", "");
+    if (getNotes() == false)
+    {
+	return;
+    }
 
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == 4) {
-			if(xhr.status == 200){
-	          alert("Melody saved!");
-			} else{
-				alert ("Melody failed saving!");
-			}
-		}
-	};
-	xhr.timeout = 15000;
-	xhr.open("POST", "/save", true);
-	xhr.setRequestHeader("Content-Type", "text/plain");
-	var data = name + "\n" + document.getElementById("melody").value.trim();
-	xhr.send(data);
+    var name = prompt("Enter a name", "");
+    if (name.trim() == "") {
+	alert("Invalid name!");
+	return;
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+	if (xhr.readyState == 4) {
+	    if(xhr.status == 200){
+		alert("Melody saved!");
+		updateMelodyList();
+	    } else{
+		alert ("Melody failed saving!");
+	    }
+	}
+    };
+    xhr.timeout = 15000;
+    xhr.open("POST", "/save", true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    var data = name + "\n" + document.getElementById("melody").value.trim();
+    xhr.send(data);
 }
 
 
 function Load (){
-	var name = prompt("Enter the name", "");
+    var select = document.getElementById("melody-list");
+    if (select.length == 0 || select.options[0].value == "") {
+	return;
+    }
+    var name = select.options[select.selectedIndex].value;
 
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == 4) {
-			if(xhr.status == 200){
-			    document.getElementById("melody").value = xhr.responseText;
-			} else{
-				alert("Failed to load melody!");
-			}
-		}
-	};
-	xhr.timeout = 15000;
-	xhr.open("POST", "/load", true);
-	xhr.setRequestHeader("Content-Type", "text/plain");
-	xhr.send(name);
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+	if (xhr.readyState == 4) {
+	    if(xhr.status == 200){
+		document.getElementById("melody").value = xhr.responseText;
+	    } else{
+		alert("Failed to load melody!");
+	    }
+	}
+    };
+    xhr.timeout = 15000;
+    xhr.open("POST", "/load", true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.send(name);
 }
+
+function Delete (){
+    var select = document.getElementById("melody-list");
+    if (select.length == 0 || select.options[0].value == "") {
+	return;
+    }
+    var name = select.options[select.selectedIndex].value;
+
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+	if (xhr.readyState == 4) {
+	    if(xhr.status == 200){
+		updateMelodyList();
+	    } else{
+		alert("Failed to delete melody!");
+	    }
+	}
+    };
+    xhr.timeout = 15000;
+    xhr.open("POST", "/delete", true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    var select = document.getElementById("melody-list");
+    var name = select.options[select.selectedIndex].value;
+    xhr.send(name);
+}
+
+window.onload = updateMelodyList;

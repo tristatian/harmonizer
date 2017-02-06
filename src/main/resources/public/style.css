@@ -29,6 +29,12 @@ input[type=button] {
 	cursor: pointer;
 }
 
+select {
+    width: 250px;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
 input[type=button]:hover {
     color: red;
 }
